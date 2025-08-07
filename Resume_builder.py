@@ -182,14 +182,17 @@ if st.button("Generate Resume (PDF)"):
             if proj['link']:
                 pdf.set_text_color(0, 0, 255)
                 pdf.cell(0, 10, proj['title'], ln=False, link=proj['link'])
+                pdf.ln(2)
             else:
                 pdf.set_text_color(0, 0, 0)
                 pdf.cell(0, 10, proj['title'], ln=False)
+                pdf.ln(2)
+
 
         # Stack and duration (aligned)
             pdf.set_text_color(0, 0, 0)
             if proj['stack']:
-                pdf.cell(0, 10, f" – {proj['stack']}", ln=False)
+                pdf.cell(0, 10, f" - {proj['stack']}", ln=False)
             if proj['duration']:
                pdf.cell(0, 10, f"   {proj['duration']}", align="R")
 
@@ -212,6 +215,8 @@ if st.button("Generate Resume (PDF)"):
         for line in skills.split("\n"):
             if line.strip():
                 pdf.cell(0, 10, line.strip(), ln=True)
+
+        pdf.ln(4) 
 
     # Certificates
     if st.session_state.certificates:
