@@ -20,9 +20,29 @@ summary = st.text_area("Write your professional summary")
 
 # ----------------------- Education -----------------------
 st.header("Education")
-edu_degree = st.text_input("Degree")
-edu_school = st.text_input("School/College")
-edu_year = st.text_input("Year")
+if "education" not in st.session_state:
+    st.session_state.education = []
+
+def add_education():
+    st.session_state.education.append({"Degree": "", "School/College": "" , "year": ""})
+
+def delete_education(index):
+    if 0 <= index < len(st.session_state.education):
+        st.session_state.education.pop(index)
+
+to_remove_edu = None
+for i, edu in enumerate(st.session_state.education):
+    with st.expander(f"Education {i+1}"):
+        edu["Degree"] = st.text_input("Education Title", value=edu["Degree"], key=f"edu_title_{i}")
+        edu["School/College"] = st.text_input("School/College", value=edu["School/College"], key=f"edu_school_{i}")
+        edu["year"] = st.text_input("year", value=edu["year"], key=f"edu_year_{i}")
+        if st.button("🗑️ Delete", key=f"delete_edu_{i}"):
+            to_remove_edu = i
+if to_remove_edu is not None:
+    delete_education(to_remove_edu)
+
+st.button("➕ Add Another Education", on_click=add_education)
+
 
 # ----------------------- Work Experience -----------------------
 st.header("Work Experience (Optional)")
@@ -56,7 +76,7 @@ if "projects" not in st.session_state:
     st.session_state.projects = []
 
 def add_project():
-    st.session_state.projects.append({"title": "", "desc": "", "link": "", "stack": "", "duration": ""})
+    st.session_state.projects.append({"title": "", "stack": "" ,"duration": "" , "desc": "", "link": "" })
 
 def delete_project(index):
     if 0 <= index < len(st.session_state.projects):
@@ -123,44 +143,61 @@ if st.button("Generate Resume (PDF)"):
     pdf.set_font("DejaVu", "I", 13)
     pdf.cell(0, 10, job_title, ln=True)
 
-    pdf.set_font("DejaVu", "", 11)
+    pdf.set_font("DejaVu", "", 10)
     contact_line = f"{email} | {phone}"
-    pdf.cell(0, 10, contact_line, ln=True)
-    links_line = " | ".join(filter(None, [linkedin, portfolio, github]))
+    pdf.cell(0, 5, contact_line, ln=True)
+    links_line = " • ".join(filter(None, [linkedin, portfolio, github]))
     if links_line:
-        pdf.multi_cell(0, 10, links_line)
+        pdf.multi_cell(0, 5, links_line)
         pdf.ln(2)
-        y = pdf.get_y()
-        pdf.set_draw_color(0, 0, 0)
-        pdf.line(10, y, 200, y)
-        pdf.ln(6)
+    
+    pdf.ln(10)
+       
 
 
     # Summary
     if summary:
         pdf.set_font("DejaVu", "B", 12)
-        pdf.cell(0, 10, "Professional Summary", ln=True)
+        pdf.cell(0, 5, "Professional Summary", ln=True)
+        y = pdf.get_y()
+        pdf.set_draw_color(0, 0, 0)
+        pdf.line(10, y, 200, y)
+        pdf.ln(3)
         pdf.set_font("DejaVu", "", 11)
-        pdf.multi_cell(0, 10, summary)
-        pdf.ln(4)
-
-    # Education
-    if edu_degree or edu_school or edu_year:
-        pdf.set_font("DejaVu", "B", 12)
-        pdf.cell(0, 10, "Education", ln=True)
-        pdf.set_font("DejaVu", "", 11)
-        line = f"{edu_degree} – {edu_school}"
-        pdf.cell(0, 10, line, ln=False)
-        if edu_year:
-            pdf.cell(0, 10, f"   {edu_year}", align="R")
+        pdf.multi_cell(0, 5, summary)
         pdf.ln(10)
 
-    # Experience
+  
+        
+        
+
+    # Education
+    if st.session_state.education:
+        pdf.set_font("DejaVu", "B", 12)
+        pdf.cell(0, 10, "Education", ln=True)
+        y = pdf.get_y()
+        pdf.set_draw_color(0, 0, 0)
+        pdf.line(10, y, 200, y)
+        pdf.ln(3)
+        pdf.set_font("DejaVu", "", 11)
+        for edu in st.session_state.education:
+            pdf.set_font("DejaVu", "B", 11)
+            header = f"{edu['Degree']} – {edu['School/College']}"
+            pdf.cell(0, 10, header, ln=False)
+            if edu["year"]:
+                pdf.cell(0, 10, f"   {edu['year']}", align="R")
+            pdf.ln(10)
+
+#experience
     if st.session_state.experiences:
         pdf.set_font("DejaVu", "B", 12)
         pdf.cell(0, 10, "Work Experience", ln=True)
+        y = pdf.get_y()
+        pdf.set_draw_color(0, 0, 0)
+        pdf.line(10, y, 200, y)
+        pdf.ln(3)
         pdf.set_font("DejaVu", "", 11)
-        for exp in st.session_state.experiences:
+        for e in st.session_state.experiences:
             pdf.set_font("DejaVu", "B", 11)
             header = f"{exp['title']} – {exp['company']}"
             pdf.cell(0, 10, header, ln=False)
@@ -168,66 +205,87 @@ if st.button("Generate Resume (PDF)"):
                 pdf.cell(0, 10, f"   {exp['duration']}", align="R")
             pdf.ln(8)
             pdf.set_font("DejaVu", "", 11)
-            pdf.multi_cell(0, 10, exp["desc"])
-            pdf.ln(2)
+            bullets = exp['desc'].split("•")
+            for b in bullets:
+                if b.strip():
+                    pdf.multi_cell(0, 5, f"     • {b.strip()}")
+            
+            pdf.ln(10)
 
    
 # Projects
     if st.session_state.projects:
         pdf.set_font("DejaVu", "B", 12)
-        pdf.cell(0, 10, "Projects", ln=True)
-        pdf.ln(2)
+        pdf.cell(0, 5, "Projects", ln=True)
+        y = pdf.get_y()
+        pdf.set_draw_color(0, 0, 0)
+        pdf.line(10, y, 200, y)
+        pdf.ln(3)
+       
         for proj in st.session_state.projects:
             pdf.set_font("DejaVu", "B", 11)
             if proj['link']:
-                pdf.set_text_color(0, 0, 255)
-                pdf.cell(0, 10, proj['title'], ln=False, link=proj['link'])
-                pdf.ln(2)
+                pdf.set_text_color(0, 0, 0)
+                pdf.cell(0, 5, proj['title'], ln=True, link=proj['link'])
+                
             else:
                 pdf.set_text_color(0, 0, 0)
-                pdf.cell(0, 10, proj['title'], ln=False)
-                pdf.ln(2)
+                pdf.cell(0, 5, proj['title'], ln=True)
+                
 
 
         # Stack and duration (aligned)
-            pdf.set_text_color(0, 0, 0)
+            
             if proj['stack']:
-                pdf.cell(0, 10, f" - {proj['stack']}", ln=False)
+                pdf.set_font("DejaVu", "", 9)
+                pdf.set_text_color(0, 0, 0)
+                pdf.cell(0, 5, f"     Tech stack - {proj['stack']}", ln=False)
             if proj['duration']:
-               pdf.cell(0, 10, f"   {proj['duration']}", align="R")
+               pdf.set_font("DejaVu", "", 10)
+               pdf.set_text_color(0, 0, 0)
+               pdf.cell(0, 5, f"   {proj['duration']}", align="R" , ln= True)
+            pdf.ln(5)
 
-            pdf.ln(8)
+           
 
         # 📝 Description with bullets
-            pdf.set_font("DejaVu", "", 12)
+            pdf.set_font("DejaVu", "", 11)
             bullets = proj['desc'].split("•")
             for b in bullets:
                 if b.strip():
-                    pdf.multi_cell(0, 10, f"• {b.strip()}")
+                    pdf.multi_cell(0, 5, f"     • {b.strip()}")
 
-            pdf.ln(4)  # space after each project
+            pdf.ln(8)  # space after each project
 
     # Skills
     if skills:
         pdf.set_font("DejaVu", "B", 12)
-        pdf.cell(0, 10, "Skills", ln=True)
+        pdf.cell(0, 6, "Skills", ln=True)
+        y = pdf.get_y()
+        pdf.set_draw_color(0, 0, 0)
+        pdf.line(10, y, 200, y)
+        pdf.ln(3)
         pdf.set_font("DejaVu", "", 11)
         for line in skills.split("\n"):
             if line.strip():
-                pdf.cell(0, 10, line.strip(), ln=True)
+                pdf.cell(0, 5, line.strip(), ln=True)
 
-        pdf.ln(4) 
+        pdf.ln(10) 
 
     # Certificates
     if st.session_state.certificates:
         pdf.set_font("DejaVu", "B", 12)
-        pdf.cell(0, 10, "Certificates", ln=True)
-        pdf.set_font("DejaVu", "", 11)
+        pdf.cell(0, 6, "Certificates", ln=True)
+        y = pdf.get_y()
+        pdf.set_draw_color(0, 0, 0)
+        pdf.line(10, y, 200, y)
+        pdf.ln(3)
+        pdf.set_font("DejaVu", "", 10)
         for cert in st.session_state.certificates:
             line = cert['title']
             if cert['year']:
                 line += f" ({cert['year']})"
-            pdf.cell(0, 10, line, ln=True)
+            pdf.cell(0, 5, line, ln=True)
 
     pdf.output("resume.pdf")
 
