@@ -186,7 +186,7 @@ if st.button("Generate Resume (PDF)"):
             pdf.cell(0, 10, header, ln=False)
             if edu["year"]:
                 pdf.cell(0, 10, f"   {edu['year']}", align="R")
-            pdf.ln(10)
+                pdf.ln(10)
 
 #experience
     if st.session_state.experiences:
